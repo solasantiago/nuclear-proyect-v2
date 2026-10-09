@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f171b" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Mapa de materias de Ingeniería Química (UTN FRBA, Plan 2023) y materias en común con Ingeniería Nuclear (UTN FRC, Plan 2027).">
+<title>Mapa de materias · Química y Nuclear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap">
+<style>
+/* Layout: resumen arriba, después una planilla por nivel con dos columnas de tildes alineadas a la derecha. */
+:root {
+  --bg: #f2f6f7;
+  --surface: #ffffff;
+  --fg: #14232b;
+  --muted: #586a73;
+  --line: #d5dfe3;
+  --accent: #0b6e7f;
+  --ok: #1c8048;
+  --ok-tint: #e2f3e8;
+  --reg: #a96a05;
+  --reg-tint: #fbf0d8;
+  --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --col: 5.5rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171b; --surface: #172228; --fg: #e6eef1; --muted: #93a5ae; --line: #2a3940;
+    --accent: #5cc3d4; --ok: #55c784; --ok-tint: #17301f; --reg: #e5ac45; --reg-tint: #33280f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171b; --surface: #172228; --fg: #e6eef1; --muted: #93a5ae; --line: #2a3940;
+  --accent: #5cc3d4; --ok: #55c784; --ok-tint: #17301f; --reg: #e5ac45; --reg-tint: #33280f;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.45;
+  padding-inline: 16px; padding-block: 28px 56px;
+}
+.wrap { max-width: 860px; margin-inline: auto; display: flex; flex-direction: column; gap: 22px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.5rem, 4.5vw, 2.1rem); line-height: 1.15; letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+.lede { color: var(--muted); margin: 8px 0 0; max-width: 62ch; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* Resumen */
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat b { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.stat.ok b { color: var(--ok); }
+.stat.reg b { color: var(--reg); }
+.bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); }
+.bar i { display: block; height: 100%; transition: width .25s ease; }
+.bar .b-ok { background: var(--ok); }
+.bar .b-reg { background: var(--reg); }
+.barwrap { display: flex; flex-direction: column; gap: 7px; }
+.barcap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; font-size: 13.5px; color: var(--muted); }
+.barcap strong { font-family: var(--font-display); font-size: 1.05rem; color: var(--ok); font-variant-numeric: tabular-nums; }
+.extras { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px; color: var(--muted); }
+.extras strong { color: var(--fg); font-weight: 600; }
+
+/* Barra de filtros + estado de guardado */
+.tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button {
+  font: inherit; font-size: 13.5px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+}
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 500; }
+.filters button:focus-visible, .cell input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.save { font-size: 12.5px; color: var(--muted); }
+
+/* Planilla por nivel */
+.level { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) var(--col) var(--col); align-items: center; }
+.level-head { padding: 14px 0 10px 16px; border-bottom: 1px solid var(--line); align-items: end; }
+.level-head .count { display: block; font-size: 12.5px; color: var(--muted); margin-top: 3px; font-weight: 400; font-family: var(--font-body); }
+.colhead { font-size: 12px; font-weight: 600; text-align: center; padding-bottom: 2px; }
+.colhead.ok { color: var(--ok); }
+.colhead.reg { color: var(--reg); }
+.colhead .short { display: none; }
+.subject { border-bottom: 1px solid var(--line); padding-left: 16px; min-height: 52px; }
+.subject:last-child { border-bottom: 0; }
+.subject[data-state="A"] { background: var(--ok-tint); }
+.subject[data-state="R"] { background: var(--reg-tint); }
+.name { padding-block: 9px; min-width: 0; overflow-wrap: anywhere; }
+.name .t { font-weight: 500; }
+.name .meta { display: block; font-size: 12.5px; color: var(--muted); }
+.tag { font-family: var(--font-data); font-size: 10.5px; letter-spacing: .04em; color: var(--accent); border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.cell { display: flex; align-items: center; justify-content: center; align-self: stretch; cursor: pointer; }
+.cell input { width: 22px; height: 22px; margin: 0; cursor: pointer; }
+.cell.ok input { accent-color: var(--ok); }
+.cell.reg input { accent-color: var(--reg); }
+.row.one { grid-template-columns: minmax(0, 1fr) var(--col); }
+.colhead.com { color: var(--accent); }
+.cell.com input { accent-color: var(--accent); }
+.name .st { display: block; font-size: 12.5px; color: var(--muted); }
+.name .st.ok { color: var(--ok); font-weight: 500; }
+.name .st.reg { color: var(--reg); font-weight: 500; }
+.stat.com b { color: var(--accent); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button {
+  font: inherit; font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--muted);
+  background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 12px; cursor: pointer; white-space: nowrap;
+}
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.panel { display: flex; flex-direction: column; gap: 22px; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+.empty { padding: 14px 16px; color: var(--muted); font-size: 13.5px; }
+.foot { font-size: 12.5px; color: var(--muted); max-width: 70ch; }
+.foot a { color: var(--accent); }
+.foot p { margin: 0 0 6px; }
+@media (max-width: 520px) {
+  :root { --col: 3.9rem; }
+  .colhead .long { display: none; }
+  .colhead .short { display: inline; }
+  .stat b { font-size: 1.4rem; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+/* Versión fija: marcas de solo lectura y ajustes para iPhone */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+body { margin: 0; font-size: 16px; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 56px; }
+.cell { cursor: default; }
+.mark { width: 26px; height: 26px; border: 2px solid var(--muted); border-radius: 6px; display: grid; place-items: center; color: var(--surface); opacity: .45; }
+.mark svg { width: 18px; height: 18px; display: none; }
+.mark.on { opacity: 1; }
+.mark.on svg { display: block; }
+.cell.ok .mark.on { background: var(--ok); border-color: var(--ok); }
+.cell.reg .mark.on { background: var(--reg); border-color: var(--reg); }
+.cell.com .mark.on { background: var(--accent); border-color: var(--accent); }
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: visible; margin-inline: -4px; padding-top: 8px; }
+.tabs button { min-height: 48px; font-size: 15px; white-space: normal; line-height: 1.2; padding: 8px 6px; }
+.filters button { min-height: 40px; font-size: 14.5px; padding: 8px 14px; }
+.name .t { font-size: 16px; }
+.name .meta, .name .st { font-size: 13.5px; }
+.subject { min-height: 58px; }
+.stat span, .level-head .count, .extras, .barcap, .foot { font-size: 13.5px; }
+.colhead { font-size: 12.5px; }
+.eyebrow { font-size: 12px; }
+@media (max-width: 520px) {
+  :root { --col: 3.6rem; }
+  .subject, .level-head { padding-left: 12px; }
+  .summary { padding: 14px; }
+  .tag { margin-left: 4px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Carreras">
+    <button type="button" role="tab" id="t-quimica" data-tab="quimica" aria-controls="tab-quimica" aria-selected="true">Química · FRBA</button>
+    <button type="button" role="tab" id="t-nuclear" data-tab="nuclear" aria-controls="tab-nuclear" aria-selected="false">Nuclear · FRC</button>
+  </nav>
+  <div class="panel" id="tab-quimica" role="tabpanel" aria-labelledby="t-quimica">
+  <header>
+    <p class="eyebrow">UTN FRBA · Plan 2023 · Ord. C.S. 1875</p>
+    <h1>Ingeniería Química: mapa de materias</h1>
+    <p class="lede">Situación al 9 de octubre de 2026. <strong>Aprobada</strong>: final aprobado. <strong>Regularizada</strong>: cursada aprobada, falta rendir el final.</p>
+  </header>
+
+  <section class="summary" aria-label="Resumen">
+    <div class="stats">
+      <div class="stat ok"><b id="s-ok">0</b><span>aprobadas</span></div>
+      <div class="stat reg"><b id="s-reg">0</b><span>finales pendientes</span></div>
+      <div class="stat"><b id="s-pend">0</b><span>sin cursar</span></div>
+    </div>
+    <div class="barwrap">
+      <div class="barcap"><span><strong id="pct">0 %</strong> de las materias aprobadas</span><span class="num" id="pct-d">0 de 41 materias</span></div>
+      <div class="bar" role="img" id="bar" aria-label="Avance de la carrera">
+        <i class="b-ok" id="bar-ok" style="width:0"></i><i class="b-reg" id="bar-reg" style="width:0"></i>
+      </div>
+    </div>
+    <div class="extras">
+      <span>Obligatorias: <strong class="num" id="x-total">0 / 41</strong></span>
+      <span>Título intermedio: <strong class="num" id="x-ti">0 / 26</strong></span>
+      <span>Electivas: <strong class="num" id="x-el">0 / 24 hs</strong></span>
+    </div>
+  </section>
+
+  <div class="tools">
+    <div class="filters" role="group" aria-label="Filtrar materias">
+      <button type="button" id="f-todas" data-f="todas" aria-pressed="true">Todas</button>
+      <button type="button" id="f-pend" data-f="pend" aria-pressed="false">Sin cursar</button>
+      <button type="button" id="f-reg" data-f="reg" aria-pressed="false">Debo el final</button>
+      <button type="button" id="f-ok" data-f="ok" aria-pressed="false">Aprobadas</button>
+    </div>
+  </div>
+
+  <div id="levels" style="display:flex;flex-direction:column;gap:18px"></div>
+
+  <footer class="foot">
+    <p><span class="tag" style="margin-left:0">TU</span> Materia requerida para el título intermedio de Técnico/a Universitario/a en Química (Ord. C.S. 1912).</p>
+    <p>Las horas son semanales: equivalentes anuales en las obligatorias y cuatrimestrales en las electivas. El título de grado pide 24 hs cuatrimestrales de electivas y 150 hs reloj de Práctica Profesional Supervisada.</p>
+    <p>Fuente: <a href="https://www.frba.utn.edu.ar/wp-content/uploads/2023/03/PLAN-DE-ESTUDIOS-2023-UTN-FRBA.pdf">Plan de Estudios 2023, UTN FRBA</a>. El documento no incluye correlatividades.</p>
+  </footer>
+  </div>
+
+  <div class="panel" id="tab-nuclear" role="tabpanel" aria-labelledby="t-nuclear" hidden>
+    <header>
+      <p class="eyebrow">UTN FRC · Plan 2027 · Ord. C.S. 2231/2026</p>
+      <h1>Ingeniería Nuclear: materias en común</h1>
+      <p class="lede">Están marcadas las materias que se llaman igual que en Ingeniería Química y ya están aprobadas. Debajo de cada una figura la situación en Química.</p>
+    </header>
+
+    <section class="summary" aria-label="Resumen de materias en común">
+      <div class="stats">
+        <div class="stat com"><b id="n-com">0</b><span>en común, de 40</span></div>
+        <div class="stat ok"><b id="n-ok">0</b><span>ya aprobadas</span></div>
+        <div class="stat reg"><b id="n-reg">0</b><span>con final pendiente</span></div>
+      </div>
+      <div class="barwrap">
+        <div class="barcap"><span><strong id="npct">0 %</strong> de las materias de Nuclear ya aprobadas</span><span class="num" id="npct-d">0 de 40 materias</span></div>
+        <div class="bar" role="img" id="nbar" aria-label="Materias en común ya aprobadas o regularizadas">
+          <i class="b-ok" id="nbar-ok" style="width:0"></i><i class="b-reg" id="nbar-reg" style="width:0"></i>
+        </div>
+      </div>
+      <div class="extras">
+        <span>En común sin cursar: <strong class="num" id="nx-pend">0</strong></span>
+        <span>Sin equivalente por nombre: <strong class="num" id="nx-prop">0</strong></span>
+      </div>
+    </section>
+
+    <div id="nlevels" class="stack"></div>
+
+    <footer class="foot">
+      <p><span class="tag" style="margin-left:0">H</span> Materia homogénea según el Anexo II de la Ord. C.S. 2232/2026.</p>
+      <p>Que dos materias se llamen igual no garantiza la equivalencia: la resuelve la Facultad Regional Córdoba al tramitar el pase, comparando programas y cargas horarias. Las horas son semanales durante el cuatrimestre de cursado.</p>
+      <p>El plan suma un bloque de electivas en quinto nivel (10 hs semanales) y la Práctica Profesional Supervisada.</p>
+      <p>Fuente: <a href="https://www.frc.utn.edu.ar/carreras/ingenieria-nuclear/">Ingeniería Nuclear, UTN FRC</a> y <a href="http://www.frc.utn.edu.ar/wp-content/uploads/2026/08/2232-Ord.-Correlatividades-IN.pdf">Ord. 2232/2026</a>.</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  // [id, nombre, horas, dictado]  dictado: A anual, 1 primer cuatrimestre, 2 segundo cuatrimestre
+  var PLAN = [
+    { id: 'n1', titulo: 'Primer nivel', m: [
+      ['n1-iiq', 'Introducción a la Ingeniería Química', 3, 'A'],
+      ['n1-sr', 'Sistemas de Representación', 2, 'A'],
+      ['n1-in1', 'Inglés I', 2, 'A'],
+      ['n1-iys', 'Ingeniería y Sociedad', 2, '1'],
+      ['n1-aga', 'Álgebra y Geometría Analítica', 5, '1'],
+      ['n1-am1', 'Análisis Matemático I', 5, '1'],
+      ['n1-am2', 'Análisis Matemático II', 5, '2'],
+      ['n1-qui', 'Química', 5, '2'],
+      ['n1-fi', 'Fundamentos de Informática', 2, '2']
+    ]},
+    { id: 'n2', titulo: 'Segundo nivel', m: [
+      ['n2-iep', 'Introducción a Equipos y Procesos', 3, 'A'],
+      ['n2-qo', 'Química Orgánica', 5, 'A'],
+      ['n2-qi', 'Química Inorgánica', 4, '1'],
+      ['n2-in2', 'Inglés II', 2, '1'],
+      ['n2-f1', 'Física I', 5, '1'],
+      ['n2-pye', 'Probabilidad y Estadística', 3, '2'],
+      ['n2-f2', 'Física II', 5, '2'],
+      ['n2-msa', 'Matemática Superior Aplicada', 3, '2']
+    ]},
+    { id: 'n3', titulo: 'Tercer nivel', m: [
+      ['n3-bme', 'Balance de Masa y Energía', 3, 'A'],
+      ['n3-eco', 'Economía', 3, 'A'],
+      ['n3-qa', 'Química Aplicada', 2, 'A'],
+      ['n3-ter', 'Termodinámica', 4, '1'],
+      ['n3-cm', 'Ciencia de los Materiales', 2, '1'],
+      ['n3-qan', 'Química Analítica', 4, '1'],
+      ['n3-mqb', 'Microbiología y Química Biológica', 3, '1'],
+      ['n3-fq', 'Fisicoquímica', 4, '2'],
+      ['n3-leg', 'Legislación', 2, '2'],
+      ['n3-ft', 'Fenómenos de Transporte', 5, '2']
+    ]},
+    { id: 'n4', titulo: 'Cuarto nivel', m: [
+      ['n4-dso', 'Diseño, Simulación, Optimización y Seguridad de Procesos', 4, 'A'],
+      ['n4-ou1', 'Operaciones Unitarias I', 5, '1'],
+      ['n4-tet', 'Tecnología de la Energía Térmica', 5, '1'],
+      ['n4-oi', 'Organización Industrial', 3, '2'],
+      ['n4-irq', 'Ingeniería de las Reacciones Químicas', 5, '2'],
+      ['n4-ou2', 'Operaciones Unitarias II', 5, '2'],
+      ['n4-mi', 'Mecánica Industrial', 3, '2']
+    ]},
+    { id: 'n5', titulo: 'Quinto nivel', m: [
+      ['n5-pf', 'Proyecto Final', 4, 'A'],
+      ['n5-pb', 'Procesos Biotecnológicos', 3, '1'],
+      ['n5-cap', 'Control Automático de Procesos', 4, '1'],
+      ['n5-mie', 'Máquinas e Instalaciones Eléctricas', 2, '1'],
+      ['n5-cce', 'Calidad y Control Estadístico de Procesos', 3, '1'],
+      ['n5-ia', 'Ingeniería Ambiental', 3, '2'],
+      ['n5-hst', 'Higiene y Seguridad en el Trabajo', 2, '2']
+    ]},
+    { id: 'el', titulo: 'Electivas', electivas: true, m: [
+      ['el-gc', 'Gestión de la Calidad', 5, 'C'],
+      ['el-cef', 'Cálculo por Elementos Finitos', 5, 'C'],
+      ['el-ran', 'Radioquímica y Aplicaciones Nucleares', 5, 'C'],
+      ['el-eiq1', 'Electrónica para Ingeniería Química', 5, 'C'],
+      ['el-eiq2', 'Electrónica para Ingeniería Química II', 5, 'C'],
+      ['el-de', 'Diseño de Equipos', 5, 'C'],
+      ['el-aoa', 'Alimentos de Origen Animal', 5, 'C'],
+      ['el-aov', 'Alimentos de Origen Vegetal', 5, 'C'],
+      ['el-ba', 'Biotecnología Ambiental', 4, 'C'],
+      ['el-tfe', 'Tratamiento Fisicoquímico de Efluentes', 4, 'C'],
+      ['el-abb', 'Aplicaciones Biotecnológicas de Biorreactores', 5, 'C'],
+      ['el-bi', 'Bioprocesos en la Industria', 5, 'C'],
+      ['el-ta', 'Tecnología de los Alimentos', 5, 'C'],
+      ['el-rn', 'Reactores Nucleares', 5, 'C']
+    ]},
+    { id: 'pps', titulo: 'Práctica Profesional Supervisada', extra: true, m: [
+      ['pps', 'Práctica Profesional Supervisada', 150, 'P']
+    ]}
+  ];
+  var DICT = { A: 'Anual', '1': '1.er cuatrimestre', '2': '2.º cuatrimestre', C: 'Cuatrimestral', P: '' };
+  var LS_KEY = 'materias-iq-frba-2023';
+
+  function esTI(nivel, id) { return (nivel === 'n1' || nivel === 'n2' || nivel === 'n3') && id !== 'n3-eco'; }
+
+  var state = {"el-ran": "A", "n1-aga": "A", "n1-am1": "A", "n1-am2": "A", "n1-fi": "A", "n1-iiq": "A", "n1-in1": "A", "n1-iys": "A", "n1-qui": "A", "n1-sr": "A", "n2-f1": "A", "n2-f2": "A", "n2-iep": "A", "n2-in2": "A", "n2-msa": "A", "n2-pye": "A", "n2-qi": "R", "n3-eco": "A", "n3-fq": "R", "n3-ft": "R", "n3-leg": "A", "n3-qan": "A", "n3-ter": "R"};
+  var filtro = 'todas';
+  var rows = {};           // id -> {row, a, r, nivel, hs}
+  var heads = {};          // nivel id -> {count, empty, section}
+
+  // Ingeniería Nuclear, UTN FRC, Plan 2027.
+  // [n.º, nombre, hs semanales, dictado, id de la materia homónima en Química, [id, nombre] de una parecida, homogénea]
+  var NUC = [
+    { id: 'q1', titulo: 'Primer nivel', m: [
+      [1, 'Introducción a la Ingeniería Nuclear', 6, '1', null, null, false],
+      [2, 'Ingeniería y Sociedad', 4, '1', 'n1-iys', null, true],
+      [3, 'Álgebra y Geometría Analítica', 10, '1', 'n1-aga', null, true],
+      [4, 'Análisis Matemático I', 10, '1', 'n1-am1', null, true],
+      [5, 'Análisis Matemático II', 10, '2', 'n1-am2', null, true],
+      [6, 'Química', 10, '2', 'n1-qui', null, false],
+      [7, 'Sistemas de Representación', 4, '2', 'n1-sr', null, false],
+      [8, 'Inglés I', 4, '2', 'n1-in1', null, true]
+    ]},
+    { id: 'q2', titulo: 'Segundo nivel', m: [
+      [9, 'Fundamentos de Informática', 4, '1', 'n1-fi', null, false],
+      [10, 'Química Inorgánica', 8, '1', 'n2-qi', null, false],
+      [11, 'Física I', 10, '1', 'n2-f1', null, true],
+      [12, 'Física II', 10, '1', 'n2-f2', null, true],
+      [13, 'Matemática Superior y Métodos Numéricos', 8, '2', null, ['n2-msa', 'Matemática Superior Aplicada'], false],
+      [14, 'Probabilidad y Estadística', 6, '2', 'n2-pye', null, true],
+      [15, 'Mecánica Cuántica y Física Nuclear', 10, '2', null, null, false],
+      [16, 'Inglés II', 4, '2', 'n2-in2', null, true]
+    ]},
+    { id: 'q3', titulo: 'Tercer nivel', m: [
+      [17, 'Fenómenos de Transporte', 10, '1', 'n3-ft', null, false],
+      [18, 'Termodinámica', 10, '1', 'n3-ter', null, false],
+      [19, 'Técnicas Analíticas Nucleares', 8, '1', null, null, false],
+      [20, 'Legislación', 4, '1', 'n3-leg', null, false],
+      [21, 'Ciencia de los Materiales', 6, '2', 'n3-cm', null, false],
+      [22, 'Higiene y Seguridad en el Trabajo', 6, '2', 'n5-hst', null, false],
+      [23, 'Neutrónica', 8, '2', null, null, false],
+      [24, 'Prácticas de Laboratorio Radioquímico', 4, '2', null, null, false],
+      [25, 'Economía', 6, '2', 'n3-eco', null, true]
+    ]},
+    { id: 'q4', titulo: 'Cuarto nivel', m: [
+      [26, 'Combustible Nuclear', 8, '1', null, null, false],
+      [27, 'Reacciones Nucleares', 8, '1', null, null, false],
+      [28, 'Operaciones Unitarias', 8, '1', null, ['n4-ou1', 'Operaciones Unitarias I'], false],
+      [29, 'Mecánica Racional', 8, '1', null, null, false],
+      [30, 'Diseño de Reactores Nucleares', 10, '2', null, null, false],
+      [31, 'Simulación y Códigos Nucleares', 10, '2', null, null, false],
+      [32, 'Tecnología de la Energía Térmica', 8, '2', 'n4-tet', null, false]
+    ]},
+    { id: 'q5', titulo: 'Quinto nivel', m: [
+      [33, 'Organización Industrial', 6, '1', 'n4-oi', null, false],
+      [34, 'Gestión Ambiental y de Residuos Radioactivos', 6, '1', null, null, false],
+      [35, 'Control Automático de Procesos', 8, '1', 'n5-cap', null, false],
+      [36, 'Electrónica y Electrotecnia', 8, '1', null, null, false],
+      [37, 'Gestión de Capital Humano', 6, '2', null, null, false],
+      [38, 'Calidad y Control Estadístico de Procesos', 6, '2', 'n5-cce', null, false],
+      [39, 'Seguridad de Plantas Nucleares', 6, '2', null, null, false],
+      [40, 'Proyecto Final', 4, 'A', 'n5-pf', null, false]
+    ]}
+  ];
+  var LS_KEY_C = 'materias-in-frc-2027-comunes';
+  var LS_TAB = 'materias-tab';
+  var comunes = {"in-10": false, "in-17": false, "in-18": false, "in-21": false, "in-22": false, "in-32": false, "in-33": false, "in-35": false, "in-38": false, "in-40": false};
+  var nrows = {};          // 'in-13' -> {row, input, st}
+  var nheads = {};
+
+  function esComun(m) { var k = 'in-' + m[0]; return (k in comunes) ? comunes[k] : !!m[4]; }
+
+  function buildNuc() {
+    var host = document.getElementById('nlevels');
+    NUC.forEach(function (niv) {
+      var sec = el('section', 'level');
+      var head = el('div', 'row one level-head');
+      var h = el('h2', null, niv.titulo);
+      var count = el('span', 'count');
+      h.appendChild(count);
+      head.appendChild(h);
+      var cc = el('span', 'colhead com'); cc.innerHTML = '<span class="long">En común</span><span class="short">Común</span>';
+      head.appendChild(cc);
+      sec.appendChild(head);
+      niv.m.forEach(function (m) {
+        var k = 'in-' + m[0];
+        var row = el('div', 'row one subject');
+        var name = el('div', 'name');
+        name.appendChild(el('span', 't', m[1]));
+        if (m[6]) { var tg = el('span', 'tag', 'H'); tg.title = 'Materia homogénea'; name.appendChild(tg); }
+        name.appendChild(el('span', 'meta', m[2] + ' hs · ' + DICT[m[3]]));
+        var st = el('span', 'st');
+        name.appendChild(st);
+        row.appendChild(name);
+        var mk = marca('com', 'En común con Química');
+        var input = mk.input;
+        row.appendChild(mk.label);
+        sec.appendChild(row);
+        nrows[k] = { row: row, input: input, st: st };
+      });
+      host.appendChild(sec);
+      nheads[niv.id] = count;
+    });
+  }
+
+  function renderNuc() {
+    var total = 0, com = 0, cOk = 0, cReg = 0;
+    var TXT = { A: 'aprobada', R: 'regularizada, falta el final', '': 'sin cursar' };
+    NUC.forEach(function (niv) {
+      var nCom = 0;
+      niv.m.forEach(function (m) {
+        var r = nrows['in-' + m[0]];
+        var refId = m[4] || (m[5] && m[5][0]) || null;
+        var s = refId ? (state[refId] || '') : '';
+        var on = esComun(m);
+        total++;
+        setMark(r.input, on);
+        if (on) { com++; nCom++; if (s === 'A') cOk++; if (s === 'R') cReg++; }
+        if (on && s) r.row.dataset.state = s; else delete r.row.dataset.state;
+        r.st.className = 'st' + (s === 'A' ? ' ok' : s === 'R' ? ' reg' : '');
+        if (m[4]) r.st.textContent = 'En Química: ' + TXT[s];
+        else if (m[5]) r.st.textContent = 'Parecida en Química: ' + m[5][1] + ' (' + TXT[s] + ')';
+        else r.st.textContent = 'Sin materia del mismo nombre en Química';
+      });
+      nheads[niv.id].textContent = nCom + ' de ' + niv.m.length + ' en común';
+    });
+    document.getElementById('n-com').textContent = com;
+    document.getElementById('n-ok').textContent = cOk;
+    document.getElementById('n-reg').textContent = cReg;
+    document.getElementById('nbar-ok').style.width = (cOk / total * 100) + '%';
+    document.getElementById('nbar-reg').style.width = (cReg / total * 100) + '%';
+    document.getElementById('nbar').setAttribute('aria-label', cOk + ' aprobadas y ' + cReg + ' regularizadas de ' + total + ' materias de Nuclear');
+    document.getElementById('npct').textContent = Math.round(cOk / total * 100) + ' %';
+    document.getElementById('npct-d').textContent = cOk + ' de ' + total + ' materias';
+    document.getElementById('nx-pend').textContent = com - cOk - cReg;
+    document.getElementById('nx-prop').textContent = total - com;
+  }
+
+  function limpiarC(obj) {
+    var out = {};
+    if (obj && typeof obj === 'object') {
+      Object.keys(obj).forEach(function (k) { if (nrows[k] && typeof obj[k] === 'boolean') out[k] = obj[k]; });
+    }
+    return out;
+  }
+
+  function showTab(t) {
+    if (t !== 'nuclear') t = 'quimica';
+    ['quimica', 'nuclear'].forEach(function (n) {
+      document.getElementById('tab-' + n).hidden = n !== t;
+      document.getElementById('t-' + n).setAttribute('aria-selected', n === t ? 'true' : 'false');
+    });
+    try { localStorage.setItem(LS_TAB, t); } catch (e) {}
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function build() {
+    var host = document.getElementById('levels');
+    PLAN.forEach(function (niv) {
+      var sec = el('section', 'level');
+      var head = el('div', 'row level-head');
+      var h = el('h2', null, niv.titulo);
+      var count = el('span', 'count');
+      h.appendChild(count);
+      head.appendChild(h);
+      var ca = el('span', 'colhead ok'); ca.innerHTML = '<span class="long">Aprobada</span><span class="short">Aprob.</span>';
+      var cr = el('span', 'colhead reg'); cr.innerHTML = '<span class="long">Regularizada</span><span class="short">Regul.</span>';
+      head.appendChild(ca); head.appendChild(cr);
+      sec.appendChild(head);
+
+      niv.m.forEach(function (m) {
+        var id = m[0];
+        var row = el('div', 'row subject');
+        var name = el('div', 'name');
+        var t = el('span', 't', m[1]);
+        name.appendChild(t);
+        if (esTI(niv.id, id)) { var tg = el('span', 'tag', 'TU'); tg.title = 'Requerida para el título intermedio'; name.appendChild(tg); }
+        var meta = m[3] === 'P' ? m[2] + ' hs reloj en total' : m[2] + ' hs · ' + DICT[m[3]];
+        name.appendChild(el('span', 'meta', meta));
+        row.appendChild(name);
+
+        var a = check(id, 'A', 'ok', 'Aprobada: ' + m[1]);
+        row.appendChild(a.label);
+        var r = null;
+        if (m[3] === 'P') { row.appendChild(el('span')); }
+        else { r = check(id, 'R', 'reg', 'Regularizada: ' + m[1]); row.appendChild(r.label); }
+
+        sec.appendChild(row);
+        rows[id] = { row: row, a: a.input, r: r ? r.input : null, nivel: niv, hs: m[2] };
+      });
+      var empty = el('div', 'empty', 'Ninguna materia de este nivel coincide con el filtro.');
+      empty.hidden = true;
+      sec.appendChild(empty);
+      host.appendChild(sec);
+      heads[niv.id] = { count: count, empty: empty };
+    });
+  }
+
+  var TILDE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function marca(cls, titulo) {
+    var cell = el('span', 'cell ' + cls);
+    var m = el('span', 'mark');
+    m.innerHTML = TILDE;
+    m.setAttribute('role', 'img');
+    m.dataset.l = titulo;
+    cell.appendChild(m);
+    return { label: cell, input: m };
+  }
+  function setMark(m, on) {
+    m.classList.toggle('on', on);
+    m.setAttribute('aria-label', m.dataset.l + (on ? ': sí' : ': no'));
+  }
+  function check(id, val, cls, aria) { return marca(cls, val === 'A' ? 'Aprobada' : 'Regularizada'); }
+
+  function render() {
+    var ok = 0, reg = 0, total = 0, ti = 0, elHs = 0;
+    PLAN.forEach(function (niv) {
+      var nOk = 0, nReg = 0, visibles = 0;
+      niv.m.forEach(function (m) {
+        var id = m[0], s = state[id] || '', r = rows[id];
+        setMark(r.a, s === 'A');
+        if (r.r) setMark(r.r, s === 'R');
+        if (s) r.row.dataset.state = s; else delete r.row.dataset.state;
+        var show = filtro === 'todas' || (filtro === 'pend' && !s) || (filtro === 'reg' && s === 'R') || (filtro === 'ok' && s === 'A');
+        r.row.hidden = !show;
+        if (show) visibles++;
+        if (s === 'A') nOk++;
+        if (s === 'R') nReg++;
+        if (!niv.electivas && !niv.extra) {
+          total++;
+          if (s === 'A') { ok++; if (esTI(niv.id, id)) ti++; }
+          if (s === 'R') reg++;
+        }
+        if (niv.electivas && s === 'A') elHs += m[2];
+      });
+      var h = heads[niv.id];
+      h.empty.hidden = visibles > 0;
+      if (niv.extra) h.count.textContent = nOk ? 'Acreditada' : 'Sin acreditar';
+      else if (niv.electivas) h.count.textContent = elHs + ' de 24 hs cuatrimestrales aprobadas' + (nReg ? ' · ' + nReg + ' con final pendiente' : '');
+      else h.count.textContent = nOk + ' de ' + niv.m.length + ' aprobadas' + (nReg ? ' · ' + nReg + ' con final pendiente' : '');
+    });
+    document.getElementById('s-ok').textContent = ok;
+    document.getElementById('s-reg').textContent = reg;
+    document.getElementById('s-pend').textContent = total - ok - reg;
+    document.getElementById('bar-ok').style.width = (ok / total * 100) + '%';
+    document.getElementById('bar-reg').style.width = (reg / total * 100) + '%';
+    document.getElementById('bar').setAttribute('aria-label', ok + ' aprobadas y ' + reg + ' regularizadas de ' + total + ' obligatorias');
+    document.getElementById('pct').textContent = Math.round(ok / total * 100) + ' %';
+    document.getElementById('pct-d').textContent = ok + ' de ' + total + ' materias';
+    document.getElementById('x-total').textContent = ok + ' / ' + total;
+    document.getElementById('x-ti').textContent = ti + ' / 26';
+    document.getElementById('x-el').textContent = elHs + ' / 24 hs';
+    renderNuc();
+  }
+
+  function limpiar(obj) {
+    var out = {};
+    if (obj && typeof obj === 'object') {
+      Object.keys(obj).forEach(function (k) { if (rows[k] && (obj[k] === 'A' || (obj[k] === 'R' && rows[k].r))) out[k] = obj[k]; });
+    }
+    return out;
+  }
+
+  build();
+  buildNuc();
+  render();
+
+  document.querySelectorAll('.filters button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      filtro = b.dataset.f;
+      document.querySelectorAll('.filters button').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      render();
+    });
+  });
+
+  var tabIni = location.hash === '#nuclear' ? 'nuclear' : location.hash === '#quimica' ? 'quimica' : '';
+  if (!tabIni) { try { tabIni = localStorage.getItem(LS_TAB) || ''; } catch (e) {} }
+  showTab(tabIni);
+  document.querySelectorAll('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () { showTab(b.dataset.tab); window.scrollTo(0, 0); });
+  });
+})();
+</script>
+</body>
+</html>
