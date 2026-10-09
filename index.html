@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#0f171b" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Mapa de materias de Ingeniería Química (UTN FRBA, Plan 2023) y materias en común con Ingeniería Nuclear (UTN FRC, Plan 2027).">
 <title>Mapa de materias · Química y Nuclear</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap">
@@ -161,10 +163,32 @@ body { margin: 0; font-size: 16px; padding-inline: max(16px, env(safe-area-inset
   .summary { padding: 14px; }
   .tag { margin-left: 4px; }
 }
+
+.brand { display: flex; align-items: center; gap: 12px; padding-top: 18px; margin-bottom: -10px; }
+.logo { width: 54px; height: 54px; flex: none; }
+.logo .hx { fill: none; stroke: var(--accent); stroke-width: 2.6; stroke-linejoin: round; }
+.logo .or { fill: none; stroke: var(--accent); stroke-width: 2; }
+.logo .nu { fill: var(--accent); }
+.logo .el { fill: var(--fg); }
+.brand-t { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; line-height: 1.2; }
+.brand-s { display: block; font-size: 13.5px; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Logo: átomo dentro de un hexágono">
+      <defs><radialGradient id="lg-glow"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.55"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient></defs>
+      <circle cx="32" cy="32" r="24" fill="url(#lg-glow)"/>
+      <polygon class="hx" points="32,3 57.1,17.5 57.1,46.5 32,61 6.9,46.5 6.9,17.5"/>
+      <ellipse class="or" cx="32" cy="32" rx="20" ry="7.5"/>
+      <ellipse class="or" cx="32" cy="32" rx="20" ry="7.5" transform="rotate(60 32 32)"/>
+      <ellipse class="or" cx="32" cy="32" rx="20" ry="7.5" transform="rotate(120 32 32)"/>
+      <circle class="nu" cx="32" cy="32" r="4.6"/>
+      <circle class="el" cx="52" cy="32" r="2.4"/><circle class="el" cx="22" cy="49.3" r="2.4"/><circle class="el" cx="22" cy="14.7" r="2.4"/>
+    </svg>
+    <div><span class="brand-t">Mapa de materias</span><span class="brand-s">Ingeniería Química → Ingeniería Nuclear</span></div>
+  </div>
   <nav class="tabs" role="tablist" aria-label="Carreras">
     <button type="button" role="tab" id="t-quimica" data-tab="quimica" aria-controls="tab-quimica" aria-selected="true">Química · FRBA</button>
     <button type="button" role="tab" id="t-nuclear" data-tab="nuclear" aria-controls="tab-nuclear" aria-selected="false">Nuclear · FRC</button>
